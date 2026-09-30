@@ -1,0 +1,43 @@
+version: 2
+
+models:
+  - name: interruptions_10a_data_errors
+    description: >
+      Clear data errors in Schedule 10a raw interruption data, one row per record per failed check.
+      Only unambiguous breaches of the ID determination, physical limits or the 10a template.
+    columns:
+      - name: check_name
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - DUPLICATE_ROW
+                - MISSING_START_OR_END
+                - START_OUTSIDE_DISCLOSURE_YEAR
+                - END_BEFORE_START
+                - ZERO_DURATION
+                - UNDER_1_MINUTE
+                - MISSING_VALUE
+                - NEGATIVE_VALUE
+                - FRACTIONAL_ICPS
+                - SAIDI_OR_SAIFI_WITH_NO_ICPS
+                - SAIFI_ZERO_BUT_SAIDI_REQUIRES_IT
+                - SAIDI_EXCEEDS_PHYSICAL_MAXIMUM
+                - INVALID_CLASS
+                - TRANSPOWER_CLASS_D_ROW
+                - MISSING_IDENTIFIER_OR_FEEDER
+
+  - name: interruptions_10a_data_errors_summary
+    description: Rows affected by each data error check, by EDB and disclosure year.
+
+  - name: reconcile_10a_s10
+    description: >
+      Schedule 10a sums vs Schedule 10(i) SAIDI, SAIFI and interruption counts by EDB, disclosure
+      year and class (B planned, C unplanned), with % differences and a verdict explaining mismatches.
+    columns:
+      - name: class
+        tests:
+          - accepted_values:
+              values: ['B', 'C']
+      - name: verdict
+        tests: [not_null]
