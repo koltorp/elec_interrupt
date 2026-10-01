@@ -1,0 +1,34 @@
+version: 2
+
+# The electricity distribution (EDB) mart, and the checks run on it.
+#
+# To check another sector mart, copy this file (e.g. gdb_mart.yml), change edb to the new
+# sector throughout, and add the sector's column mapping to macros/dq_standard_rows.sql.
+# Leave out checks that don't apply to the mart.
+#
+# Location defaults to the target database and schema 'edb'. Override with
+#   dbt test --vars '{edb_database: ANALYTICS, edb_schema: MARTS}'
+# If the table's name differs, set `identifier:` on it.
+
+sources:
+  - name: edb
+    description: Electricity distribution businesses.
+    database: "{{ var('edb_database', target.database) }}"
+    schema: "{{ var('edb_schema', 'edb') }}"
+    tables:
+      - name: edb_mart
+        description: EDB information disclosures, full history. One row per disclosed value, identified by uid.
+        data_tests:
+          - dq_no_duplicate_rows: {name: edb_dq_duplicate_rows, arguments: {sector: edb}}
+          - dq_no_ambiguous_rows: {name: edb_dq_ambiguous_rows, arguments: {sector: edb}}
+          - dq_no_scale_breaks: {name: edb_dq_scale_break, arguments: {sector: edb}}
+          - dq_no_magnitude_outliers: {name: edb_dq_magnitude_outlier, arguments: {sector: edb}}
+          - dq_no_sign_flips: {name: edb_dq_sign_flip, arguments: {sector: edb}}
+          - dq_no_percent_as_proportion: {name: edb_dq_percent_as_proportion, arguments: {sector: edb}}
+          - dq_consistent_units: {name: edb_dq_units_within_year, arguments: {sector: edb, scope: within_year}}
+          - dq_consistent_units: {name: edb_dq_units_across_years, arguments: {sector: edb, scope: across_years}, config: {tags: [informational]}}
+          - dq_units_are_units: {name: edb_dq_units_are_units, arguments: {sector: edb}}
+          - dq_no_blank_schedules: {name: edb_dq_blank_schedule, arguments: {sector: edb}}
+          - dq_no_schedule_gaps: {name: edb_dq_schedule_gap, arguments: {sector: edb}}
+          - dq_no_row_count_drops: {name: edb_dq_row_count_drop, arguments: {sector: edb}}
+          - dq_no_year_gaps: {name: edb_dq_year_gap, arguments: {sector: edb}}

@@ -1,0 +1,45 @@
+name: disclosure_quality
+version: "1.0.0"
+config-version: 2
+profile: disclosure_quality
+
+# Data-quality tests on the sector marts of Commerce Commission information-disclosure data in
+# Snowflake. The project builds no models: every test reads its mart directly. One yml file per
+# mart in models/ attaches the tests. See README.md.
+
+macro-paths: ["macros"]
+test-paths: ["tests"]
+analysis-paths: ["analyses"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # The checks only read disclosure years from this one onwards. Override for a run with
+  #   dbt test --vars '{dq_min_disclosure_year: 2008}'
+  dq_min_disclosure_year: 2013
+
+  # Values in the units column that aren't units of measure (text fields and similar). The unit
+  # tests ignore them.
+  dq_non_units:
+    - "text input"
+    - "text_input"
+    - "[Select one]"
+    - "0=No 1=Yes"
+    - "No/New/Stopped/Other"
+    - "no unit"
+
+  # Elementary re-runs each failing test's query to save sample rows. The findings are already
+  # stored in full (the <sector>_dq_* tables), so skip it: it doubles the cost of the slower tests.
+  test_sample_row_count: 0
+
+data_tests:
+  disclosure_quality:
+    # Each test's findings are saved to a table named after the test (edb_dq_scale_break ...),
+    # in the target schema: no extra schema is created.
+    +store_failures: true
+    +schema: null
+    +tags: ["data_quality"]
+
+models:
+  elementary:
+    +schema: elementary        # Elementary's run and test history tables
